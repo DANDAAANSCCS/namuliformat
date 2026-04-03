@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NamuLiFormat - Código Urgente</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .code-input {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.5rem;
+      text-align: center;
+      letter-spacing: 12px;
+      padding: 20px;
+      background: var(--bg-secondary);
+      border: 2px solid var(--accent);
+      border-radius: var(--radius);
+      color: var(--accent);
+      width: 100%;
+      box-shadow: 0 0 30px var(--accent-glow);
+    }
+    .code-input:focus {
+      outline: none;
+      box-shadow: 0 0 40px rgba(0, 245, 160, 0.3);
+    }
+    .pulse { animation: pulse 1.5s infinite; }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 20px var(--accent-glow); }
+      50% { box-shadow: 0 0 40px rgba(0, 245, 160, 0.4); }
+    }
+    .urgent-banner {
+      background: linear-gradient(90deg, rgba(255,184,48,0.15), rgba(255,56,96,0.15));
+      border: 1px solid var(--warning);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 20px;
+      animation: pulse 2s infinite;
+    }
+    .timer { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; color: var(--warning); }
+  </style>
+</head>
+<body>
+
+<div id="app-loading" class="login-wrapper">
+  <div class="login-box">
+    <div class="logo" style="justify-content:center;">
+      <div class="logo-icon">N</div>
+      <div><h1>NamuLiFormat</h1><div class="logo-subtitle">Cargando...</div></div>
+    </div>
+    <div class="spinner" style="margin:20px auto;"></div>
+  </div>
+</div>
+
+<div id="app-code" class="form-container" style="display:none; max-width:480px;">
+  <div class="header" style="justify-content:center;">
+    <div class="logo">
+      <div class="logo-icon">N</div>
+      <div><h1>NamuLiFormat</h1><div class="logo-subtitle">Código Urgente</div></div>
+    </div>
+  </div>
+
+  <div class="urgent-banner">
+    <p style="color:var(--warning); font-weight:700; font-size:1.1rem;">⚡ SE NECESITA TU CÓDIGO AHORA</p>
+    <p id="code-message" style="color:var(--text-secondary); margin-top:6px;"></p>
+  </div>
+
+  <div class="card pulse">
+    <p style="text-align:center; color:var(--text-secondary); margin-bottom:16px;">
+      Hola <strong id="code-user" style="color:var(--accent);"></strong>, ingresa el código que aparece en tu pantalla:
+    </p>
+    
+    <input type="text" id="code-value" class="code-input" placeholder="000000" maxlength="10" autofocus autocomplete="off" inputmode="numeric">
+    
+    <button id="send-code-btn" class="btn btn-primary" onclick="submitCode()" style="width:100%; justify-content:center; margin-top:20px; font-size:1.1rem; padding:16px;">
+      ⚡ ENVIAR CÓDIGO
+    </button>
+  </div>
+
+  <p style="text-align:center; color:var(--text-dim); font-size:0.85rem; margin-top:12px;">
+    El código será enviado instantáneamente al equipo.
+  </p>
+</div>
+
+<div id="app-done" class="form-container" style="display:none; max-width:480px;">
+  <div class="success-screen">
+    <div class="icon">✅</div>
+    <h2>¡Código Enviado!</h2>
+    <p>El código fue recibido al instante.</p>
+    <p style="margin-top:8px; color:var(--text-dim);">Puedes cerrar esta página.</p>
+  </div>
+</div>
+
+<div id="app-expired" class="form-container" style="display:none; max-width:480px;">
+  <div class="success-screen">
+    <div class="icon">⏰</div>
+    <h2 style="color:var(--warning);">Ya respondido</h2>
+    <p>Este código ya fue enviado anteriormente.</p>
+  </div>
+</div>
+
+<div id="app-error" class="login-wrapper" style="display:none;">
+  <div class="login-box">
+    <div class="logo" style="justify-content:center;">
+      <div class="logo-icon">N</div>
+      <div><h1>NamuLiFormat</h1></div>
+    </div>
+    <div style="margin-top:24px;">
+      <div style="font-size:3rem;">⚠️</div>
+      <p style="color:var(--danger); margin-top:12px;">Link no válido.</p>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const token = params.get('t');
+
+async function init() {
+  if (!token) { show('app-error'); return; }
+  try {
+    const res = await fetch(`/api/codes/validate/${token}`);
+    const data = await res.json();
+    if (!res.ok) { show('app-error'); return; }
+    if (data.status !== 'pending') { show('app-expired'); return; }
+
+    document.getElementById('code-user').textContent = data.client_name || 'Usuario';
+    document.getElementById('code-message').textContent = data.message || '';
+    show('app-code');
+    document.getElementById('code-value').focus();
+  } catch (err) { show('app-error'); }
+}
+
+async function submitCode() {
+  const code = document.getElementById('code-value').value.trim();
+  if (!code) { toast('Ingresa el código', 'error'); return; }
+
+  const btn = document.getElementById('send-code-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Enviando...';
+
+  try {
+    const res = await fetch('/api/codes/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, code })
+    });
+    if (!res.ok) throw new Error('Error');
+    show('app-done');
+  } catch (err) {
+    toast('Error al enviar', 'error');
+    btn.disabled = false;
+    btn.textContent = '⚡ ENVIAR CÓDIGO';
+  }
+}
+
+// Submit on Enter
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') submitCode();
+});
+
+function show(id) {
+  ['app-loading','app-code','app-done','app-expired','app-error'].forEach(s => {
+    document.getElementById(s).style.display = 'none';
+  });
+  document.getElementById(id).style.display = 'block';
+}
+
+function toast(msg, type='info') {
+  const c = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+init();
+</script>
+</body>
+</html>

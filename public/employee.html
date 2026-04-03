@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NamuLiFormat - Panel Empleado</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen" class="login-wrapper">
+  <div class="login-box">
+    <div class="logo">
+      <div class="logo-icon">N</div>
+      <div>
+        <h1>NamuLiFormat</h1>
+        <div class="logo-subtitle">Panel Empleado</div>
+      </div>
+    </div>
+    <form onsubmit="login(event)" style="margin-top:28px; text-align:left;">
+      <div class="form-group">
+        <label class="form-label">Usuario</label>
+        <input type="text" id="login-user" class="form-input" placeholder="Tu nombre de usuario" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contraseña</label>
+        <input type="password" id="login-pass" class="form-input" placeholder="Tu contraseña" required>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:8px;">
+        Iniciar Sesión
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="main-app" class="app-container" style="display:none;">
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">N</div>
+      <div>
+        <h1>NamuLiFormat</h1>
+        <div class="logo-subtitle">Panel Empleado</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="user-badge">
+        <span class="dot"></span>
+        <span id="emp-name"></span>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="logout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('generate')">Generar Link</button>
+    <button class="tab" onclick="switchTab('links')">Mis Links</button>
+    <button class="tab" onclick="switchTab('orders')">Órdenes</button>
+    <button class="tab" onclick="switchTab('chat')">💬 Chat</button>
+  </div>
+
+  <!-- TAB: Generate Link -->
+  <div id="tab-generate" class="tab-content active">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">🔗 Generar Link Único</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nombre del Usuario</label>
+        <input type="text" id="client-name-input" class="form-input" placeholder="Ej: Juan Pérez">
+      </div>
+      <button class="btn btn-primary" onclick="generateLink()">
+        ⚡ Generar Link
+      </button>
+
+      <div id="generated-link" style="display:none;">
+        <div class="link-display">
+          <input type="text" id="link-url" readonly>
+          <button class="btn btn-secondary btn-sm" onclick="copyLink()">Copiar</button>
+        </div>
+        <p style="color:var(--text-dim); font-size:0.85rem; margin-top:8px;">
+          📋 Envía este link al usuario para que llene su formato.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Links -->
+  <div id="tab-links" class="tab-content">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">📋 Links Generados</span>
+        <button class="btn btn-secondary btn-sm" onclick="loadLinks()">↻ Actualizar</button>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Token</th>
+              <th>Estado</th>
+              <th>Fecha</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="links-table"></tbody>
+        </table>
+      </div>
+      <div id="links-empty" class="empty-state" style="display:none;">
+        <div class="icon">🔗</div>
+        <p>No has generado links aún</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Orders -->
+  <div id="tab-orders" class="tab-content">
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">🎮 Órdenes de Usuarios</span>
+        <button class="btn btn-secondary btn-sm" onclick="loadOrders()">↻ Actualizar</button>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Roblox</th>
+              <th>Nivel</th>
+              <th>Estado</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody id="orders-table"></tbody>
+        </table>
+      </div>
+      <div id="orders-empty" class="empty-state" style="display:none;">
+        <div class="icon">📭</div>
+        <p>No hay órdenes todavía</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Chat -->
+  <div id="tab-chat" class="tab-content">
+    <div class="card" style="height:500px; display:flex; flex-direction:column;">
+      <div class="card-header" style="flex-shrink:0;">
+        <span class="card-title">💬 Chat con Admin</span>
+        <button class="btn btn-secondary btn-sm" onclick="loadChat()">↻</button>
+      </div>
+      <div id="chat-messages" style="flex:1; overflow-y:auto; padding:10px 0;">
+        <div class="empty-state"><div class="icon">💬</div><p>Sin mensajes aún</p></div>
+      </div>
+      <div style="display:flex; gap:8px; padding-top:12px; border-top:1px solid var(--border); flex-shrink:0;">
+        <input type="text" id="chat-input" class="form-input" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="btn btn-primary" onclick="sendChat()">Enviar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<script>
+let employee = null;
+
+async function login(e) {
+  e.preventDefault();
+  const username = document.getElementById('login-user').value.trim();
+  const password = document.getElementById('login-pass').value;
+
+  try {
+    const res = await fetch('/api/employee/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    employee = data;
+    localStorage.setItem('employee', JSON.stringify(data));
+    showApp();
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+  document.getElementById('emp-name').textContent = employee.username;
+  loadLinks();
+  loadOrders();
+}
+
+function logout() {
+  localStorage.removeItem('employee');
+  employee = null;
+  location.reload();
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById(`tab-${name}`).classList.add('active');
+
+  if (name === 'links') loadLinks();
+  if (name === 'orders') loadOrders();
+  if (name === 'chat') { loadChat(); startChatPolling(); }
+}
+
+async function generateLink() {
+  const clientName = document.getElementById('client-name-input').value.trim();
+  if (!clientName) return toast('Ingresa el nombre del usuario', 'error');
+
+  try {
+    const res = await fetch('/api/links/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ client_name: clientName, employee_id: employee.id })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    document.getElementById('link-url').value = data.link;
+    document.getElementById('generated-link').style.display = 'block';
+    document.getElementById('client-name-input').value = '';
+    toast('¡Link generado exitosamente!', 'success');
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+}
+
+function copyLink() {
+  const input = document.getElementById('link-url');
+  input.select();
+  navigator.clipboard.writeText(input.value);
+  toast('Link copiado al portapapeles', 'success');
+}
+
+async function loadLinks() {
+  if (!employee) return;
+  try {
+    const res = await fetch(`/api/links/employee/${employee.id}`);
+    const links = await res.json();
+    const tbody = document.getElementById('links-table');
+    const empty = document.getElementById('links-empty');
+
+    if (links.length === 0) {
+      tbody.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+
+    empty.style.display = 'none';
+    tbody.innerHTML = links.map(l => `
+      <tr>
+        <td><strong>${l.client_name}</strong></td>
+        <td><code style="color:var(--text-dim); font-size:0.8rem;">${l.link_token.substring(0, 12)}...</code></td>
+        <td>${l.is_used 
+          ? '<span class="status status-completada">Usado</span>' 
+          : '<span class="status status-pendiente">Pendiente</span>'}</td>
+        <td>${new Date(l.created_at).toLocaleDateString('es-MX')}</td>
+        <td>${!l.is_used ? `<button class="btn btn-secondary btn-sm" onclick="copyTokenLink('${l.link_token}')">Copiar</button>` : '—'}</td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    toast('Error cargando links', 'error');
+  }
+}
+
+function copyTokenLink(token) {
+  const url = `${window.location.origin}/form.html?token=${token}`;
+  navigator.clipboard.writeText(url);
+  toast('Link copiado', 'success');
+}
+
+async function loadOrders() {
+  if (!employee) return;
+  try {
+    const res = await fetch(`/api/orders/employee/${employee.id}`);
+    const orders = await res.json();
+    const tbody = document.getElementById('orders-table');
+    const empty = document.getElementById('orders-empty');
+
+    if (orders.length === 0) {
+      tbody.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+
+    empty.style.display = 'none';
+    const statusNames = { pendiente: 'Pendiente', aceptada: 'Aceptada', en_proceso: 'En Proceso', completada: 'Completada', denegada: 'Denegada' };
+
+    tbody.innerHTML = orders.map(o => `
+      <tr>
+        <td><strong>${o.client_name}</strong></td>
+        <td>
+          ${o.roblox_avatar_url ? `<img src="${o.roblox_avatar_url}" class="avatar-sm">` : ''}
+          ${o.roblox_username || o.roblox_id}
+        </td>
+        <td>${o.current_level} → <strong style="color:var(--accent);">${o.target_level}</strong></td>
+        <td><span class="status status-${o.status}">${statusNames[o.status] || o.status}</span></td>
+        <td>${new Date(o.created_at).toLocaleDateString('es-MX')}</td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    toast('Error cargando órdenes', 'error');
+  }
+}
+
+// ── QUICK CHAT ───────────────────────────
+let chatPollingInterval = null;
+let lastChatTime = '1970-01-01';
+
+async function loadChat() {
+  try {
+    const res = await fetch(`/api/chat/messages?after=${lastChatTime}`);
+    const messages = await res.json();
+    const container = document.getElementById('chat-messages');
+    if (messages.length === 0 && lastChatTime === '1970-01-01') return;
+    if (lastChatTime === '1970-01-01') container.innerHTML = '';
+    messages.forEach(m => {
+      const isMe = m.sender_type === 'employee';
+      const div = document.createElement('div');
+      div.style.cssText = `margin-bottom:10px;display:flex;${isMe?'justify-content:flex-end':'justify-content:flex-start'};`;
+      div.innerHTML = `
+        <div style="max-width:75%;padding:10px 14px;border-radius:12px;${isMe
+          ?'background:var(--accent);color:var(--bg-primary);border-bottom-right-radius:4px;'
+          :'background:var(--bg-secondary);border:1px solid var(--border);border-bottom-left-radius:4px;'}">
+          <p style="font-size:0.75rem;${isMe?'color:rgba(0,0,0,0.5);':'color:var(--accent);'}font-weight:600;margin-bottom:4px;">${m.sender_name}</p>
+          <p style="font-size:0.9rem;">${m.message}</p>
+          <p style="font-size:0.7rem;${isMe?'color:rgba(0,0,0,0.4);':'color:var(--text-dim);'}margin-top:4px;">${new Date(m.created_at).toLocaleTimeString('es-MX')}</p>
+        </div>`;
+      container.appendChild(div);
+      lastChatTime = m.created_at;
+    });
+    container.scrollTop = container.scrollHeight;
+  } catch (err) {}
+}
+
+function startChatPolling() {
+  if (chatPollingInterval) clearInterval(chatPollingInterval);
+  chatPollingInterval = setInterval(loadChat, 3000);
+}
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg || !employee) return;
+  input.value = '';
+  try {
+    await fetch('/api/chat/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sender_type: 'employee', sender_name: employee.username, message: msg })
+    });
+    loadChat();
+  } catch (err) { toast('Error enviando', 'error'); }
+}
+
+function toast(msg, type = 'info') {
+  const container = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// Auto-login if saved
+const saved = localStorage.getItem('employee');
+if (saved) {
+  employee = JSON.parse(saved);
+  showApp();
+}
+</script>
+</body>
+</html>

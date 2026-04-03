@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NamuLiFormat - Panel Admin</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen" class="login-wrapper">
+  <div class="login-box">
+    <div class="logo">
+      <div class="logo-icon">N</div>
+      <div>
+        <h1>NamuLiFormat</h1>
+        <div class="logo-subtitle">Administración</div>
+      </div>
+    </div>
+    <form onsubmit="adminLogin(event)" style="margin-top:28px; text-align:left;">
+      <div class="form-group">
+        <label class="form-label">Contraseña Admin</label>
+        <input type="password" id="admin-pass" class="form-input" placeholder="Contraseña maestra" required>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">
+        Acceder
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="main-app" class="app-container" style="display:none;">
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">N</div>
+      <div>
+        <h1>NamuLiFormat</h1>
+        <div class="logo-subtitle">Panel Admin</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="user-badge">
+        <span class="dot"></span>
+        Administrador
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="logout()">Salir</button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-grid" id="stats-grid">
+    <div class="stat-card green">
+      <div class="stat-value" id="stat-total">0</div>
+      <div class="stat-label">Total Órdenes</div>
+    </div>
+    <div class="stat-card yellow">
+      <div class="stat-value" id="stat-pending">0</div>
+      <div class="stat-label">Pendientes</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-value" id="stat-process">0</div>
+      <div class="stat-label">En Proceso</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-value" id="stat-completed">0</div>
+      <div class="stat-label">Completadas</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('orders')">Órdenes</button>
+    <button class="tab" onclick="switchTab('chat')">💬 Chat</button>
+    <button class="tab" onclick="switchTab('employees')">Empleados</button>
+    <button class="tab" onclick="switchTab('links')">Links</button>
+    <button class="tab" onclick="switchTab('config')">Config</button>
+  </div>
+
+  <!-- TAB: ORDERS -->
+  <div id="tab-orders" class="tab-content active">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">🎮 Todas las Órdenes</span>
+        <div style="display:flex; gap:8px;">
+          <select class="form-input" style="width:auto; padding:6px 30px 6px 12px;" id="filter-status" onchange="loadOrders()">
+            <option value="">Todos</option>
+            <option value="pendiente">Pendientes</option>
+            <option value="aceptada">Aceptadas</option>
+            <option value="en_proceso">En Proceso</option>
+            <option value="completada">Completadas</option>
+            <option value="denegada">Denegadas</option>
+          </select>
+          <button class="btn btn-secondary btn-sm" onclick="loadOrders()">↻</button>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Usuario</th>
+              <th>Roblox</th>
+              <th>Credenciales</th>
+              <th>Nivel</th>
+              <th>Empleado</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="orders-table"></tbody>
+        </table>
+      </div>
+      <div id="orders-empty" class="empty-state" style="display:none;">
+        <div class="icon">📭</div>
+        <p>No hay órdenes</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: CHAT -->
+  <div id="tab-chat" class="tab-content">
+    <div class="card" style="height:500px; display:flex; flex-direction:column;">
+      <div class="card-header" style="flex-shrink:0;">
+        <span class="card-title">💬 Chat Rápido</span>
+        <button class="btn btn-secondary btn-sm" onclick="loadChat()">↻</button>
+      </div>
+      <div id="chat-messages" style="flex:1; overflow-y:auto; padding:10px 0;">
+        <div class="empty-state"><div class="icon">💬</div><p>Sin mensajes aún</p></div>
+      </div>
+      <div style="display:flex; gap:8px; padding-top:12px; border-top:1px solid var(--border); flex-shrink:0;">
+        <input type="text" id="chat-input" class="form-input" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="btn btn-primary" onclick="sendChat()">Enviar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: EMPLOYEES -->
+  <div id="tab-employees" class="tab-content">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">👷 Empleados</span>
+        <button class="btn btn-primary btn-sm" onclick="showAddEmployee()">+ Nuevo</button>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Usuario</th>
+              <th>Teléfono</th>
+              <th>Fecha</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="employees-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: LINKS -->
+  <div id="tab-links" class="tab-content">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">🔗 Todos los Links</span>
+        <button class="btn btn-secondary btn-sm" onclick="loadLinks()">↻</button>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Empleado</th>
+              <th>Token</th>
+              <th>Estado</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody id="links-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: CONFIG -->
+  <div id="tab-config" class="tab-content">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">⚙️ Configuración Notificaciones</span>
+      </div>
+      <div class="instructions-box" style="margin-bottom:20px;">
+        <h3>📱 Cómo configurar CallMeBot</h3>
+        <ol>
+          <li>Guarda el contacto de CallMeBot: <strong>+34 644 51 84 88</strong></li>
+          <li>Envíale este mensaje por WhatsApp: <code style="color:var(--accent);">I allow callmebot to send me messages</code></li>
+          <li>Recibirás un API Key, cópialo aquí abajo</li>
+          <li>Repite el proceso con el teléfono de tu empleado si quieres notificarle también</li>
+        </ol>
+      </div>
+      <form onsubmit="saveConfig(event)">
+        <h3 style="color:var(--accent); font-family:'Orbitron',sans-serif; font-size:0.85rem; margin-bottom:16px;">📱 WHATSAPP</h3>
+        <div class="form-group">
+          <label class="form-label">Tu Número WhatsApp (Admin)</label>
+          <input type="text" id="cfg-phone" class="form-input" placeholder="+528121968034">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tu API Key (CallMeBot)</label>
+          <input type="text" id="cfg-apikey" class="form-input" placeholder="Tu apikey de CallMeBot">
+        </div>
+        <div class="form-group">
+          <label class="form-label">API Key Empleado (CallMeBot)</label>
+          <input type="text" id="cfg-emp-apikey" class="form-input" placeholder="API Key del teléfono del empleado">
+        </div>
+        <hr style="border-color:var(--border); margin:24px 0;">
+        <h3 style="color:var(--accent-secondary); font-family:'Orbitron',sans-serif; font-size:0.85rem; margin-bottom:16px;">📧 EMAIL</h3>
+        <div class="form-group">
+          <label class="form-label">Email donde recibes notificaciones</label>
+          <input type="email" id="cfg-email-to" class="form-input" placeholder="8randon3li@gmail.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Gmail que envía (puede ser el mismo)</label>
+          <input type="email" id="cfg-email-from" class="form-input" placeholder="tucorreo@gmail.com">
+          <div class="form-hint">El correo de Gmail desde donde se envían las notificaciones</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">App Password de Gmail</label>
+          <input type="password" id="cfg-email-pass" class="form-input" placeholder="xxxx xxxx xxxx xxxx">
+          <div class="form-hint">Ve a <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--accent-secondary);">myaccount.google.com/apppasswords</a> → Crea una contraseña de aplicación → Pégala aquí</div>
+        </div>
+        <hr style="border-color:var(--border); margin:24px 0;">
+        <div class="form-group">
+          <label class="form-label">🔒 Nueva Contraseña Admin (opcional)</label>
+          <input type="password" id="cfg-newpass" class="form-input" placeholder="Dejar vacío para no cambiar">
+        </div>
+        <button type="submit" class="btn btn-primary">💾 Guardar Configuración</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Edit Order -->
+<div class="modal-overlay" id="order-modal">
+  <div class="modal">
+    <h2>📝 Editar Orden #<span id="modal-order-id"></span></h2>
+    <div id="modal-order-details"></div>
+    <form onsubmit="updateOrder(event)">
+      <div class="form-group">
+        <label class="form-label">Estado</label>
+        <select class="form-input" id="modal-status">
+          <option value="pendiente">⏳ Pendiente</option>
+          <option value="aceptada">✅ Aceptada</option>
+          <option value="en_proceso">🔄 En Proceso</option>
+          <option value="completada">🏆 Completada</option>
+          <option value="denegada">❌ Denegada</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notas (opcional)</label>
+        <input type="text" id="modal-notes" class="form-input" placeholder="Notas para el empleado...">
+      </div>
+      <div style="display:flex; gap:10px; margin-top:16px;">
+        <button type="submit" class="btn btn-primary" style="flex:1; justify-content:center;">Actualizar</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('order-modal')">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: Add Employee -->
+<div class="modal-overlay" id="employee-modal">
+  <div class="modal">
+    <h2>👷 Nuevo Empleado</h2>
+    <form onsubmit="addEmployee(event)">
+      <div class="form-group">
+        <label class="form-label">Usuario</label>
+        <input type="text" id="new-emp-user" class="form-input" placeholder="Nombre de usuario" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contraseña</label>
+        <input type="password" id="new-emp-pass" class="form-input" placeholder="Contraseña" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Teléfono WhatsApp (opcional)</label>
+        <input type="text" id="new-emp-phone" class="form-input" placeholder="+52...">
+      </div>
+      <div style="display:flex; gap:10px; margin-top:16px;">
+        <button type="submit" class="btn btn-primary" style="flex:1; justify-content:center;">Crear</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('employee-modal')">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: Code Request -->
+<div class="modal-overlay" id="code-modal">
+  <div class="modal">
+    <h2>⚡ Pedir Código - Orden #<span id="code-modal-order-id"></span></h2>
+    <div id="code-modal-info"></div>
+    <div class="form-group">
+      <label class="form-label">Mensaje para el usuario</label>
+      <input type="text" id="code-modal-msg" class="form-input" value="⚡ Necesito tu código de verificación AHORA" placeholder="Mensaje urgente...">
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="requestCode()">⚡ Enviar Solicitud por WhatsApp</button>
+    
+    <div id="code-monitor" style="margin-top:20px; display:none;">
+      <div style="background:var(--bg-secondary); border:1px solid var(--accent); border-radius:var(--radius); padding:20px; text-align:center;">
+        <div class="spinner" id="code-spinner" style="margin:0 auto 12px;"></div>
+        <p id="code-status-text" style="color:var(--accent);">Esperando código del usuario...</p>
+        <p id="code-received" style="font-family:'Orbitron',sans-serif; font-size:2rem; color:var(--accent); margin-top:12px; display:none;"></p>
+      </div>
+    </div>
+    
+    <div id="code-history" style="margin-top:16px;"></div>
+    
+    <button type="button" class="btn btn-secondary" style="width:100%;justify-content:center;margin-top:12px;" onclick="closeModal('code-modal')">Cerrar</button>
+  </div>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<script>
+let adminToken = null;
+let currentOrderId = null;
+
+const statusNames = {
+  pendiente: 'Pendiente', aceptada: 'Aceptada', en_proceso: 'En Proceso',
+  completada: 'Completada', denegada: 'Denegada'
+};
+
+// ── AUTH ───────────────────────────────────
+async function adminLogin(e) {
+  e.preventDefault();
+  try {
+    const res = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: document.getElementById('admin-pass').value })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    adminToken = data.token;
+    localStorage.setItem('adminToken', adminToken);
+    showApp();
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+  loadStats();
+  loadOrders();
+}
+
+function logout() {
+  localStorage.removeItem('adminToken');
+  adminToken = null;
+  location.reload();
+}
+
+// ── TABS ──────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById(`tab-${name}`).classList.add('active');
+
+  if (name === 'orders') loadOrders();
+  if (name === 'employees') loadEmployees();
+  if (name === 'links') loadLinks();
+  if (name === 'config') loadConfig();
+  if (name === 'chat') { loadChat(); startChatPolling(); }
+}
+
+// ── STATS ─────────────────────────────────
+async function loadStats() {
+  try {
+    const res = await fetch('/api/admin/stats');
+    const data = await res.json();
+    document.getElementById('stat-total').textContent = data.total;
+    document.getElementById('stat-pending').textContent = data.pending;
+    document.getElementById('stat-process').textContent = data.in_process;
+    document.getElementById('stat-completed').textContent = data.completed;
+  } catch (err) {}
+}
+
+// ── ORDERS ────────────────────────────────
+async function loadOrders() {
+  try {
+    const res = await fetch('/api/admin/orders');
+    let orders = await res.json();
+    const filter = document.getElementById('filter-status').value;
+    if (filter) orders = orders.filter(o => o.status === filter);
+
+    const tbody = document.getElementById('orders-table');
+    const empty = document.getElementById('orders-empty');
+
+    if (orders.length === 0) {
+      tbody.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+
+    empty.style.display = 'none';
+    tbody.innerHTML = orders.map(o => `
+      <tr>
+        <td><strong>#${o.id}</strong></td>
+        <td>${o.client_name}</td>
+        <td>
+          ${o.roblox_avatar_url ? `<img src="${o.roblox_avatar_url}" class="avatar-sm">` : ''}
+          <span>${o.roblox_username || o.roblox_id}</span>
+        </td>
+        <td>
+          <span style="color:var(--text-dim); font-size:0.85rem;">
+            👤 ${o.game_username}<br>
+            🔒 <span class="pass-hidden" id="pass-${o.id}" style="cursor:pointer;" onclick="togglePass(${o.id}, '${o.game_password}')">••••••••</span>
+          </span>
+        </td>
+        <td>${o.current_level} → <strong style="color:var(--accent);">${o.target_level}</strong></td>
+        <td>${o.employee_name || '—'}</td>
+        <td><span class="status status-${o.status}">${statusNames[o.status] || o.status}</span></td>
+        <td>
+          <button class="btn btn-secondary btn-sm" onclick='editOrder(${JSON.stringify(o).replace(/'/g, "&#39;")})'>Editar</button>
+          ${o.user_phone ? `<button class="btn btn-sm" style="background:rgba(255,184,48,0.15);color:var(--warning);border:1px solid rgba(255,184,48,0.3);margin-top:4px;" onclick='openCodeModal(${JSON.stringify(o).replace(/'/g, "&#39;")})'>⚡ Código</button>` : ''}
+        </td>
+      </tr>
+    `).join('');
+
+    loadStats();
+  } catch (err) {
+    toast('Error cargando órdenes', 'error');
+  }
+}
+
+function togglePass(id, pass) {
+  const el = document.getElementById(`pass-${id}`);
+  if (el.textContent === '••••••••') {
+    el.textContent = pass;
+    el.style.color = 'var(--warning)';
+  } else {
+    el.textContent = '••••••••';
+    el.style.color = '';
+  }
+}
+
+function editOrder(order) {
+  currentOrderId = order.id;
+  document.getElementById('modal-order-id').textContent = order.id;
+  document.getElementById('modal-status').value = order.status;
+  document.getElementById('modal-notes').value = order.admin_notes || '';
+  document.getElementById('modal-order-details').innerHTML = `
+    <div style="background:var(--bg-secondary); border-radius:var(--radius-sm); padding:14px; margin-bottom:16px;">
+      <p>👤 <strong>${order.client_name}</strong></p>
+      <p style="margin-top:4px;">🆔 Roblox: ${order.roblox_username} (${order.roblox_id})</p>
+      <p style="margin-top:4px;">📊 Nivel: ${order.current_level} → ${order.target_level}</p>
+    </div>
+  `;
+  document.getElementById('order-modal').classList.add('active');
+}
+
+async function updateOrder(e) {
+  e.preventDefault();
+  try {
+    const res = await fetch(`/api/admin/orders/${currentOrderId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        status: document.getElementById('modal-status').value,
+        admin_notes: document.getElementById('modal-notes').value
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    closeModal('order-modal');
+    loadOrders();
+    toast('Orden actualizada + notificación enviada', 'success');
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+}
+
+// ── EMPLOYEES ─────────────────────────────
+async function loadEmployees() {
+  try {
+    const res = await fetch('/api/admin/employees');
+    const employees = await res.json();
+    document.getElementById('employees-table').innerHTML = employees.map(e => `
+      <tr>
+        <td><strong>#${e.id}</strong></td>
+        <td>${e.username}</td>
+        <td>${e.phone || '<span style="color:var(--text-dim)">No configurado</span>'}</td>
+        <td>${new Date(e.created_at).toLocaleDateString('es-MX')}</td>
+        <td>
+          <button class="btn btn-danger btn-sm" onclick="deleteEmployee(${e.id}, '${e.username}')">Eliminar</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    toast('Error cargando empleados', 'error');
+  }
+}
+
+function showAddEmployee() {
+  document.getElementById('employee-modal').classList.add('active');
+}
+
+async function addEmployee(e) {
+  e.preventDefault();
+  try {
+    const res = await fetch('/api/admin/employees', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: document.getElementById('new-emp-user').value.trim(),
+        password: document.getElementById('new-emp-pass').value,
+        phone: document.getElementById('new-emp-phone').value.trim()
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    closeModal('employee-modal');
+    loadEmployees();
+    toast('Empleado creado', 'success');
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+}
+
+async function deleteEmployee(id, name) {
+  if (!confirm(`¿Eliminar empleado "${name}"?`)) return;
+  try {
+    await fetch(`/api/admin/employees/${id}`, { method: 'DELETE' });
+    loadEmployees();
+    toast('Empleado eliminado', 'success');
+  } catch (err) {
+    toast('Error', 'error');
+  }
+}
+
+// ── LINKS ─────────────────────────────────
+async function loadLinks() {
+  try {
+    const res = await fetch('/api/admin/links');
+    const links = await res.json();
+    document.getElementById('links-table').innerHTML = links.map(l => `
+      <tr>
+        <td><strong>${l.client_name}</strong></td>
+        <td>${l.employee_name || '—'}</td>
+        <td><code style="color:var(--text-dim); font-size:0.8rem;">${l.link_token.substring(0, 16)}...</code></td>
+        <td>${l.is_used 
+          ? '<span class="status status-completada">Usado</span>' 
+          : '<span class="status status-pendiente">Activo</span>'}</td>
+        <td>${new Date(l.created_at).toLocaleDateString('es-MX')}</td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    toast('Error cargando links', 'error');
+  }
+}
+
+// ── CONFIG ────────────────────────────────
+async function loadConfig() {
+  try {
+    const res = await fetch('/api/admin/config');
+    const data = await res.json();
+    document.getElementById('cfg-phone').value = data.whatsapp_phone || '';
+    document.getElementById('cfg-apikey').value = data.whatsapp_apikey || '';
+    document.getElementById('cfg-emp-apikey').value = data.employee_whatsapp_apikey || '';
+    document.getElementById('cfg-email-to').value = data.email_to || '';
+    document.getElementById('cfg-email-from').value = data.email_from || '';
+    document.getElementById('cfg-email-pass').value = data.email_app_password || '';
+  } catch (err) {}
+}
+
+async function saveConfig(e) {
+  e.preventDefault();
+  try {
+    const res = await fetch('/api/admin/config', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        whatsapp_phone: document.getElementById('cfg-phone').value.trim(),
+        whatsapp_apikey: document.getElementById('cfg-apikey').value.trim(),
+        employee_whatsapp_apikey: document.getElementById('cfg-emp-apikey').value.trim(),
+        email_to: document.getElementById('cfg-email-to').value.trim(),
+        email_from: document.getElementById('cfg-email-from').value.trim(),
+        email_app_password: document.getElementById('cfg-email-pass').value.trim(),
+        new_password: document.getElementById('cfg-newpass').value || null
+      })
+    });
+    if (!res.ok) throw new Error('Error al guardar');
+    toast('Configuración guardada', 'success');
+    document.getElementById('cfg-newpass').value = '';
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+}
+
+// ── HELPERS ───────────────────────────────
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', (e) => {
+    if (e.target === m) m.classList.remove('active');
+  });
+});
+
+function toast(msg, type = 'info') {
+  const container = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// ── CODE REQUEST ──────────────────────────
+let currentCodeOrderId = null;
+let codePollingInterval = null;
+
+function openCodeModal(order) {
+  currentCodeOrderId = order.id;
+  document.getElementById('code-modal-order-id').textContent = order.id;
+  document.getElementById('code-modal-info').innerHTML = `
+    <div style="background:var(--bg-secondary);border-radius:var(--radius-sm);padding:12px;margin-bottom:16px;">
+      <p>👤 ${order.client_name} | 🆔 ${order.roblox_username}</p>
+      <p style="margin-top:4px;">📱 ${order.user_phone}</p>
+    </div>`;
+  document.getElementById('code-monitor').style.display = 'none';
+  document.getElementById('code-received').style.display = 'none';
+  document.getElementById('code-spinner').style.display = 'inline-block';
+  document.getElementById('code-status-text').textContent = 'Esperando código del usuario...';
+  loadCodeHistory(order.id);
+  document.getElementById('code-modal').classList.add('active');
+}
+
+async function requestCode() {
+  try {
+    const res = await fetch('/api/codes/request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        order_id: currentCodeOrderId,
+        message: document.getElementById('code-modal-msg').value
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    toast('⚡ Solicitud enviada por WhatsApp', 'success');
+    document.getElementById('code-monitor').style.display = 'block';
+
+    // Start polling for code
+    if (codePollingInterval) clearInterval(codePollingInterval);
+    codePollingInterval = setInterval(() => pollCode(currentCodeOrderId), 2000);
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+}
+
+async function pollCode(orderId) {
+  try {
+    const res = await fetch(`/api/codes/check/${orderId}`);
+    const codes = await res.json();
+    const latest = codes[0];
+    if (latest && latest.status === 'received' && latest.code_value) {
+      clearInterval(codePollingInterval);
+      document.getElementById('code-spinner').style.display = 'none';
+      document.getElementById('code-status-text').textContent = '🔑 ¡CÓDIGO RECIBIDO!';
+      document.getElementById('code-received').textContent = latest.code_value;
+      document.getElementById('code-received').style.display = 'block';
+      loadCodeHistory(orderId);
+    }
+  } catch (err) {}
+}
+
+async function loadCodeHistory(orderId) {
+  try {
+    const res = await fetch(`/api/codes/check/${orderId}`);
+    const codes = await res.json();
+    if (codes.length === 0) {
+      document.getElementById('code-history').innerHTML = '';
+      return;
+    }
+    document.getElementById('code-history').innerHTML = `
+      <p style="color:var(--text-dim);font-size:0.8rem;margin-bottom:8px;">Historial de códigos:</p>
+      ${codes.map(c => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--bg-secondary);border-radius:6px;margin-bottom:4px;font-size:0.85rem;">
+          <span style="color:${c.status==='received'?'var(--accent)':'var(--warning)'};">
+            ${c.status==='received'?'🔑 '+c.code_value:'⏳ Pendiente'}
+          </span>
+          <span style="color:var(--text-dim);">${new Date(c.created_at).toLocaleTimeString('es-MX')}</span>
+        </div>
+      `).join('')}
+    `;
+  } catch (err) {}
+}
+
+// ── QUICK CHAT ───────────────────────────
+let chatPollingInterval = null;
+let lastChatTime = '1970-01-01';
+
+async function loadChat() {
+  try {
+    const res = await fetch(`/api/chat/messages?after=${lastChatTime}`);
+    const messages = await res.json();
+    const container = document.getElementById('chat-messages');
+    
+    if (messages.length === 0 && lastChatTime === '1970-01-01') return;
+    
+    if (lastChatTime === '1970-01-01') container.innerHTML = '';
+
+    messages.forEach(m => {
+      const isAdmin = m.sender_type === 'admin';
+      const div = document.createElement('div');
+      div.style.cssText = `margin-bottom:10px;display:flex;${isAdmin?'justify-content:flex-end':'justify-content:flex-start'};`;
+      div.innerHTML = `
+        <div style="max-width:75%;padding:10px 14px;border-radius:12px;${isAdmin
+          ?'background:var(--accent);color:var(--bg-primary);border-bottom-right-radius:4px;'
+          :'background:var(--bg-secondary);border:1px solid var(--border);border-bottom-left-radius:4px;'}">
+          <p style="font-size:0.75rem;${isAdmin?'color:rgba(0,0,0,0.5);':'color:var(--accent);'}font-weight:600;margin-bottom:4px;">${m.sender_name}</p>
+          <p style="font-size:0.9rem;">${m.message}</p>
+          <p style="font-size:0.7rem;${isAdmin?'color:rgba(0,0,0,0.4);':'color:var(--text-dim);'}margin-top:4px;">${new Date(m.created_at).toLocaleTimeString('es-MX')}</p>
+        </div>`;
+      container.appendChild(div);
+      lastChatTime = m.created_at;
+    });
+
+    container.scrollTop = container.scrollHeight;
+  } catch (err) {}
+}
+
+function startChatPolling() {
+  if (chatPollingInterval) clearInterval(chatPollingInterval);
+  chatPollingInterval = setInterval(loadChat, 3000);
+}
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  try {
+    await fetch('/api/chat/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sender_type: 'admin', sender_name: 'Admin', message: msg })
+    });
+    loadChat();
+  } catch (err) { toast('Error enviando mensaje', 'error'); }
+}
+
+// Auto-login
+const saved = localStorage.getItem('adminToken');
+if (saved) { adminToken = saved; showApp(); }
+</script>
+</body>
+</html>

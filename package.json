@@ -1,0 +1,19 @@
+{
+  "name": "namuliformat",
+  "version": "1.0.0",
+  "description": "NamuLiFormat - Servicio de AutoFarm Roblox",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "pg": "^8.11.3",
+    "uuid": "^9.0.0",
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1",
+    "bcrypt": "^5.1.1",
+    "nodemailer": "^6.9.7"
+  }
+}

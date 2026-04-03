@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NamuLiFormat - Formato de Servicio</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div id="app-loading" class="login-wrapper">
+  <div class="login-box">
+    <div class="logo">
+      <div class="logo-icon">N</div>
+      <div>
+        <h1>NamuLiFormat</h1>
+        <div class="logo-subtitle">Verificando link...</div>
+      </div>
+    </div>
+    <div class="spinner" style="margin: 20px auto;"></div>
+  </div>
+</div>
+
+<div id="app-invalid" class="login-wrapper" style="display:none;">
+  <div class="login-box">
+    <div class="logo">
+      <div class="logo-icon">N</div>
+      <div>
+        <h1>NamuLiFormat</h1>
+        <div class="logo-subtitle">Servicio AutoFarm</div>
+      </div>
+    </div>
+    <div style="margin-top:24px;">
+      <div style="font-size:3rem; margin-bottom:16px;">⚠️</div>
+      <p id="error-msg" style="color:var(--danger); font-size:1.1rem;">Link no válido o ya utilizado.</p>
+      <p style="color:var(--text-dim); margin-top:8px;">Contacta a tu proveedor para obtener un nuevo link.</p>
+    </div>
+  </div>
+</div>
+
+<div id="app-form" class="form-container" style="display:none;">
+  <div class="header" style="justify-content:center;">
+    <div class="logo">
+      <div class="logo-icon">N</div>
+      <div>
+        <h1>NamuLiFormat</h1>
+        <div class="logo-subtitle">Servicio AutoFarm</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="text-align:center; margin-bottom:20px; border-color:var(--accent); background:rgba(0,245,160,0.05);">
+    <p style="color:var(--accent); font-size:1.1rem;">👋 ¡Hola <span id="client-name"></span>! Completa el siguiente formato para iniciar tu servicio.</p>
+  </div>
+
+  <!-- INSTRUCTIONS -->
+  <div class="instructions-box">
+    <h3>📖 ¿Cómo obtener tu ID de Roblox?</h3>
+    <ol>
+      <li>Abre tu perfil en <a href="https://www.roblox.com" target="_blank">roblox.com</a></li>
+      <li>Inicia sesión con tu cuenta</li>
+      <li>Ve a tu perfil haciendo clic en tu avatar</li>
+      <li>Mira la URL de tu navegador, será algo como: <br><code style="color:var(--accent); background:var(--bg-primary); padding:2px 8px; border-radius:4px;">roblox.com/users/<strong>123456789</strong>/profile</code></li>
+      <li>El número en la URL es tu <strong style="color:var(--accent-secondary);">ID de Roblox</strong></li>
+      <li>También puedes encontrarlo en <strong>Configuración → Cuenta</strong></li>
+    </ol>
+  </div>
+
+  <!-- FORM -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">📋 Formato de Servicio</span>
+    </div>
+
+    <form id="service-form">
+      <div class="form-group">
+        <label class="form-label">🆔 ID de Roblox</label>
+        <div style="display:flex; gap:10px;">
+          <input type="text" id="roblox-id" class="form-input" placeholder="Ej: 123456789" style="flex:1;">
+          <button type="button" id="verify-btn" class="btn btn-secondary" onclick="verifyRoblox()">Verificar</button>
+        </div>
+        <div class="form-hint">Ingresa tu ID numérico de Roblox y haz clic en "Verificar"</div>
+        
+        <div id="roblox-result" style="display:none;"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">📱 Tu Número de WhatsApp</label>
+        <input type="tel" id="user-phone" class="form-input" placeholder="Ej: +52 81 1234 5678" required>
+        <div class="form-hint">Para notificarte el estado de tu orden y solicitar códigos de verificación.</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">📊 Nivel Actual</label>
+          <input type="number" id="current-level" class="form-input" placeholder="Ej: 15" min="0" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">🎯 Nivel Objetivo</label>
+          <input type="number" id="target-level" class="form-input" placeholder="Ej: 100" min="1" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">👤 Usuario del Juego</label>
+        <input type="text" id="game-username" class="form-input" placeholder="Tu usuario dentro del juego" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">🔒 Contraseña del Juego</label>
+        <input type="password" id="game-password" class="form-input" placeholder="Tu contraseña (se mantiene segura)" required>
+        <div class="form-hint">⚠️ Tu contraseña se almacena de forma segura y solo será usada para el servicio.</div>
+      </div>
+
+      <div style="margin-top:28px;">
+        <button type="submit" id="submit-btn" class="btn btn-primary" style="width:100%; justify-content:center; font-size:1.05rem; padding:14px;" disabled>
+          Verificar ID de Roblox primero
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="app-success" class="form-container" style="display:none;">
+  <div class="success-screen">
+    <div class="icon">🎮</div>
+    <h2>¡Formato Enviado!</h2>
+    <p>Tu solicitud ha sido recibida exitosamente.</p>
+    <p style="margin-top:12px; color:var(--text-dim);">El equipo revisará tu petición y te notificarán el estado. ¡Gracias por confiar en NamuLiFormat!</p>
+    <div style="margin-top:32px; padding:20px; background:var(--bg-card); border-radius:var(--radius); border:1px solid var(--border);">
+      <p style="color:var(--text-secondary);">📋 Resumen:</p>
+      <div id="summary" style="text-align:left; margin-top:12px;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const token = params.get('token');
+let robloxVerified = false;
+let robloxData = {};
+
+// Validate link on load
+async function init() {
+  if (!token) return showInvalid('No se proporcionó un token válido.');
+
+  try {
+    const res = await fetch(`/api/link/validate/${token}`);
+    const data = await res.json();
+
+    if (!res.ok) {
+      showInvalid(data.error || 'Link no válido');
+      return;
+    }
+
+    document.getElementById('client-name').textContent = data.client_name || 'usuario';
+    document.getElementById('app-loading').style.display = 'none';
+    document.getElementById('app-form').style.display = 'block';
+  } catch (err) {
+    showInvalid('Error al verificar el link. Intenta de nuevo.');
+  }
+}
+
+function showInvalid(msg) {
+  document.getElementById('app-loading').style.display = 'none';
+  document.getElementById('error-msg').textContent = msg;
+  document.getElementById('app-invalid').style.display = 'flex';
+}
+
+async function verifyRoblox() {
+  const id = document.getElementById('roblox-id').value.trim();
+  if (!id) return toast('Ingresa tu ID de Roblox', 'error');
+
+  const btn = document.getElementById('verify-btn');
+  const resultDiv = document.getElementById('roblox-result');
+  
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+  resultDiv.style.display = 'none';
+
+  try {
+    const res = await fetch(`/api/roblox/verify/${id}`);
+    const data = await res.json();
+
+    if (!res.ok) {
+      resultDiv.innerHTML = `
+        <div class="roblox-verify error">
+          <div>❌</div>
+          <div class="roblox-info">
+            <h3 style="color:var(--danger);">ID No Encontrado</h3>
+            <p>${data.error}</p>
+          </div>
+        </div>
+      `;
+      resultDiv.style.display = 'block';
+      robloxVerified = false;
+      updateSubmitBtn();
+      return;
+    }
+
+    robloxData = data;
+    robloxVerified = true;
+
+    resultDiv.innerHTML = `
+      <div class="roblox-verify verified">
+        <img src="${data.avatar}" alt="Avatar" class="roblox-avatar">
+        <div class="roblox-info">
+          <h3 style="color:var(--accent);">✅ ${data.displayName}</h3>
+          <p>@${data.username}</p>
+          <a href="${data.profileUrl}" target="_blank">Ver perfil en Roblox →</a>
+        </div>
+      </div>
+      <div style="margin-top:8px; text-align:center;">
+        <p style="color:var(--accent); font-size:0.9rem; font-weight:600;">¿Esta es tu cuenta? Si es correcta, continúa llenando el formato.</p>
+      </div>
+    `;
+    resultDiv.style.display = 'block';
+    updateSubmitBtn();
+    toast('¡Cuenta de Roblox verificada!', 'success');
+
+  } catch (err) {
+    resultDiv.innerHTML = `
+      <div class="roblox-verify error">
+        <div>⚠️</div>
+        <div class="roblox-info">
+          <h3 style="color:var(--danger);">Error de Conexión</h3>
+          <p>No se pudo verificar. Intenta de nuevo.</p>
+        </div>
+      </div>
+    `;
+    resultDiv.style.display = 'block';
+    robloxVerified = false;
+    updateSubmitBtn();
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Verificar';
+  }
+}
+
+function updateSubmitBtn() {
+  const btn = document.getElementById('submit-btn');
+  if (robloxVerified) {
+    btn.disabled = false;
+    btn.textContent = '🚀 Enviar Formato';
+    btn.style.opacity = '1';
+  } else {
+    btn.disabled = true;
+    btn.textContent = 'Verificar ID de Roblox primero';
+    btn.style.opacity = '0.5';
+  }
+}
+
+document.getElementById('service-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  if (!robloxVerified) return toast('Primero verifica tu ID de Roblox', 'error');
+
+  const currentLevel = parseInt(document.getElementById('current-level').value);
+  const targetLevel = parseInt(document.getElementById('target-level').value);
+
+  if (targetLevel <= currentLevel) {
+    return toast('El nivel objetivo debe ser mayor al nivel actual', 'error');
+  }
+
+  const submitBtn = document.getElementById('submit-btn');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="spinner"></span> Enviando...';
+
+  try {
+    const res = await fetch('/api/orders/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token,
+        roblox_id: document.getElementById('roblox-id').value.trim(),
+        roblox_username: robloxData.username,
+        roblox_avatar_url: robloxData.avatar,
+        game_username: document.getElementById('game-username').value.trim(),
+        game_password: document.getElementById('game-password').value,
+        current_level: currentLevel,
+        target_level: targetLevel,
+        user_phone: document.getElementById('user-phone').value.trim()
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    document.getElementById('app-form').style.display = 'none';
+    document.getElementById('app-success').style.display = 'block';
+    document.getElementById('summary').innerHTML = `
+      <p style="color:var(--text-primary);">🆔 Roblox: <strong>${robloxData.displayName}</strong> (@${robloxData.username})</p>
+      <p style="color:var(--text-primary); margin-top:6px;">📊 Nivel: <strong>${currentLevel}</strong> → <strong style="color:var(--accent);">${targetLevel}</strong></p>
+      <p style="color:var(--text-primary); margin-top:6px;">⏳ Estado: <span class="status status-pendiente">Pendiente</span></p>
+    `;
+
+  } catch (err) {
+    toast(err.message || 'Error al enviar el formato', 'error');
+    submitBtn.disabled = false;
+    submitBtn.textContent = '🚀 Enviar Formato';
+  }
+});
+
+function toast(msg, type = 'info') {
+  const container = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+init();
+</script>
+</body>
+</html>
