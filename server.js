@@ -470,6 +470,8 @@ app.get('/api/admin/orders', async (req, res) => {
 app.put('/api/admin/orders/:id', async (req, res) => {
   try {
     const { status, admin_notes, subscription_months } = req.body;
+    const ROBLOX_TIMER_TOKEN = process.env.ROBLOX_TIMER_ADMIN_TOKEN || 'aDm1n_RblxT1m3r_T0k3n_2026_qW7z';
+
     const result = await pool.query(
       'UPDATE orders SET status = $1, admin_notes = $2, subscription_months = $3, updated_at = NOW() WHERE id = $4 RETURNING *',
       [status, admin_notes || '', subscription_months || 1, req.params.id]
@@ -482,7 +484,7 @@ app.put('/api/admin/orders/:id', async (req, res) => {
     const statusEmojis = { pendiente:'⏳', aceptada:'✅', en_proceso:'🔄', completada:'🏆', denegada:'❌' };
     const statusNames = { pendiente:'Pendiente', aceptada:'Aceptada', en_proceso:'En Proceso', completada:'Completada', denegada:'Denegada' };
 
-    // Si el estado cambió a "completada" y aún no tiene token, generar uno
+    // Generar token si status = completada (permite regenerar si no tiene token)
     if (status === 'completada' && !order.access_token) {
       try {
         const tokenResponse = await axios.post(
@@ -495,7 +497,7 @@ app.put('/api/admin/orders/:id', async (req, res) => {
           },
           {
             headers: {
-              'Authorization': 'Bearer aDm1n_RblxT1m3r_T0k3n_2026_qW7z',
+              'Authorization': `Bearer ${ROBLOX_TIMER_TOKEN}`,
               'Content-Type': 'application/json'
             },
             timeout: 15000
@@ -505,21 +507,25 @@ app.put('/api/admin/orders/:id', async (req, res) => {
         if (tokenResponse.data.success) {
           const { token, install_url } = tokenResponse.data;
 
-          // Guardar token en la orden
           await pool.query(
             'UPDATE orders SET access_token = $1, install_url = $2 WHERE id = $3',
             [token, install_url, req.params.id]
           );
 
-          // Actualizar el objeto order para incluir en la respuesta
           order.access_token = token;
           order.install_url = install_url;
 
           console.log(`✅ Token generado para orden #${req.params.id}: ${token}`);
+        } else {
+          // Si la API respondio pero sin exito, revertir status
+          await pool.query('UPDATE orders SET status = $1 WHERE id = $2', ['en_proceso', req.params.id]);
+          return res.status(500).json({ error: 'Error al generar token: ' + (tokenResponse.data.error || 'respuesta invalida') });
         }
       } catch (tokenErr) {
         console.error('❌ Error generando token:', tokenErr.message);
-        // No fallar la actualización de orden si falla el token
+        // Revertir status para que el admin sepa que fallo
+        await pool.query('UPDATE orders SET status = $1 WHERE id = $2', ['en_proceso', req.params.id]);
+        return res.status(500).json({ error: 'No se pudo generar el token de acceso. Intenta de nuevo.' });
       }
     }
 
@@ -528,11 +534,9 @@ app.put('/api/admin/orders/:id', async (req, res) => {
       await notifyEmployee(order.employee_id, empMsg);
     }
 
-    // Notify user via WhatsApp if they have phone
     if (order.user_phone) {
       let userMsg = `${statusEmojis[status]||'📋'} *NamuLiFormat*\n\nTu orden ha sido actualizada:\n📊 Nivel: ${order.current_level} → ${order.target_level}\n🔄 Estado: *${statusNames[status]||status}*${admin_notes?'\n📝 '+admin_notes:''}`;
 
-      // Si está completada y tiene token, agregar instrucciones de instalación
       if (status === 'completada' && order.install_url) {
         userMsg += `\n\n🎉 *¡CUENTA LISTA!*\n\n🔑 Tu acceso al AutoFarm ha sido generado:\n\n📥 *INSTRUCCIONES:*\n1. Abre este link: ${order.install_url}\n2. Descarga el instalador\n3. Ejecuta e instala tu acceso\n4. Abre AutoFarmNamuLi y disfruta!\n\n⚠️ Guarda bien este link, solo funciona en tu PC.`;
       }
@@ -540,7 +544,7 @@ app.put('/api/admin/orders/:id', async (req, res) => {
       await sendWhatsAppTo(order.user_phone, userMsg);
     }
 
-    res.json({ success: true, order: result.rows[0] });
+    res.json({ success: true, order });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

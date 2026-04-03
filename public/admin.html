@@ -245,16 +245,26 @@
   <div class="modal">
     <h2>📝 Editar Orden #<span id="modal-order-id"></span></h2>
     <div id="modal-order-details"></div>
+    <div id="modal-token-info" style="display:none; background:#0d2818; border:1px solid #28a745; border-radius:8px; padding:14px; margin-bottom:16px;">
+      <p style="color:#28a745; font-weight:bold; margin:0 0 8px;">🔑 Token de Acceso Generado</p>
+      <p style="margin:4px 0; font-size:13px;">Token: <code id="modal-token-value" style="background:#1a1a2e; padding:2px 6px; border-radius:4px; user-select:all;"></code></p>
+      <p style="margin:4px 0; font-size:13px;">Link: <a id="modal-install-link" href="#" target="_blank" style="color:#00f5a0; word-break:break-all;"></a></p>
+      <button type="button" onclick="copyModalInstallUrl()" style="margin-top:8px; padding:6px 12px; background:#28a745; color:white; border:none; border-radius:6px; cursor:pointer; font-size:12px;">📋 Copiar Link</button>
+    </div>
     <form onsubmit="updateOrder(event)">
       <div class="form-group">
         <label class="form-label">Estado</label>
-        <select class="form-input" id="modal-status">
+        <select class="form-input" id="modal-status" onchange="toggleSubscriptionField()">
           <option value="pendiente">⏳ Pendiente</option>
           <option value="aceptada">✅ Aceptada</option>
           <option value="en_proceso">🔄 En Proceso</option>
           <option value="completada">🏆 Completada</option>
           <option value="denegada">❌ Denegada</option>
         </select>
+      </div>
+      <div class="form-group" id="subscription-group" style="display:none;">
+        <label class="form-label">Meses de Suscripcion</label>
+        <input type="number" id="modal-subscription-months" class="form-input" min="1" max="120" value="1" placeholder="Meses de acceso al AutoFarm">
       </div>
       <div class="form-group">
         <label class="form-label">Notas (opcional)</label>
@@ -422,7 +432,10 @@ async function loadOrders() {
         </td>
         <td>${o.current_level} → <strong style="color:var(--accent);">${o.target_level}</strong></td>
         <td>${o.employee_name || '—'}</td>
-        <td><span class="status status-${o.status}">${statusNames[o.status] || o.status}</span></td>
+        <td>
+          <span class="status status-${o.status}">${statusNames[o.status] || o.status}</span>
+          ${o.access_token ? '<br><span style="font-size:0.75rem; color:#28a745;">🔑 Token generado</span>' : ''}
+        </td>
         <td>
           <button class="btn btn-secondary btn-sm" onclick='editOrder(${JSON.stringify(o).replace(/'/g, "&#39;")})'>Editar</button>
           ${o.user_phone ? `<button class="btn btn-sm" style="background:rgba(255,184,48,0.15);color:var(--warning);border:1px solid rgba(255,184,48,0.3);margin-top:4px;" onclick='openCodeModal(${JSON.stringify(o).replace(/'/g, "&#39;")})'>⚡ Código</button>` : ''}
@@ -452,6 +465,7 @@ function editOrder(order) {
   document.getElementById('modal-order-id').textContent = order.id;
   document.getElementById('modal-status').value = order.status;
   document.getElementById('modal-notes').value = order.admin_notes || '';
+  document.getElementById('modal-subscription-months').value = order.subscription_months || 1;
   document.getElementById('modal-order-details').innerHTML = `
     <div style="background:var(--bg-secondary); border-radius:var(--radius-sm); padding:14px; margin-bottom:16px;">
       <p>👤 <strong>${order.client_name}</strong></p>
@@ -459,26 +473,60 @@ function editOrder(order) {
       <p style="margin-top:4px;">📊 Nivel: ${order.current_level} → ${order.target_level}</p>
     </div>
   `;
+
+  // Mostrar info de token si ya existe
+  const tokenInfo = document.getElementById('modal-token-info');
+  if (order.access_token) {
+    tokenInfo.style.display = 'block';
+    document.getElementById('modal-token-value').textContent = order.access_token;
+    const installLink = document.getElementById('modal-install-link');
+    installLink.href = order.install_url;
+    installLink.textContent = order.install_url;
+  } else {
+    tokenInfo.style.display = 'none';
+  }
+
+  toggleSubscriptionField();
   document.getElementById('order-modal').classList.add('active');
+}
+
+function toggleSubscriptionField() {
+  const status = document.getElementById('modal-status').value;
+  document.getElementById('subscription-group').style.display = status === 'completada' ? 'block' : 'none';
+}
+
+function copyModalInstallUrl() {
+  const link = document.getElementById('modal-install-link').textContent;
+  navigator.clipboard.writeText(link);
+  toast('Link de instalacion copiado', 'success');
 }
 
 async function updateOrder(e) {
   e.preventDefault();
   try {
+    const status = document.getElementById('modal-status').value;
+    const body = {
+      status,
+      admin_notes: document.getElementById('modal-notes').value
+    };
+    if (status === 'completada') {
+      body.subscription_months = parseInt(document.getElementById('modal-subscription-months').value) || 1;
+    }
+
     const res = await fetch(`/api/admin/orders/${currentOrderId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        status: document.getElementById('modal-status').value,
-        admin_notes: document.getElementById('modal-notes').value
-      })
+      body: JSON.stringify(body)
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
 
     closeModal('order-modal');
     loadOrders();
-    toast('Orden actualizada + notificación enviada', 'success');
+    const msg = status === 'completada' && data.order?.access_token
+      ? 'Orden completada + token generado + notificacion enviada'
+      : 'Orden actualizada + notificacion enviada';
+    toast(msg, 'success');
   } catch (err) {
     toast(err.message, 'error');
   }
