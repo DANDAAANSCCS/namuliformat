@@ -625,6 +625,10 @@ app.get('/employee', (req, res) => res.sendFile(path.join(__dirname, 'public', '
 app.get('/form', (req, res) => res.sendFile(path.join(__dirname, 'public', 'form.html')));
 app.get('/code', (req, res) => res.sendFile(path.join(__dirname, 'public', 'code.html')));
 
+// Panel routes con tokens unicos
+app.get('/p/qdjyrdzquukba4vc', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
+app.get('/p/twszb5m4cqrsfn0z', (req, res) => res.sendFile(path.join(__dirname, 'public', 'employee.html')));
+
 initDB().then(() => {
   app.listen(PORT, () => {
     console.log(`\n🎮 NamuLiFormat corriendo en puerto ${PORT}`);
